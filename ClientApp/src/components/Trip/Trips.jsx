@@ -7,10 +7,13 @@ export class Trips extends Component
         super(props);
 
         this.onTripUpdate = this.onTripUpdate.bind(this);
+        this.onTripDelete = this.onTripDelete.bind(this);
 
         this.state = {
             trips: [],
-            loading: true
+            loading: true,
+            failed: false,
+            error: ''
         }
     }
 
@@ -23,10 +26,17 @@ export class Trips extends Component
         history.push('/update/' + id);
     }
 
+    onTripDelete(id) {
+        const {history} = this.props;
+        history.push('/delete/' + id);
+    }
+
     populateTripsData() {
         axios.get("api/trips/GetTrips").then(result => {
             const response = result.data;
-            this.setState({trips: response, loading: false});
+            this.setState({trips: response, loading: false, failed: false, error: ''});
+        }).catch(error => {
+            this.setState({trips: [], loading: false, failed: true, error: 'Trips could not be loaded'});
         })
     }
 
@@ -55,13 +65,14 @@ export class Trips extends Component
                                         <button onClick={() => this.onTripUpdate(trip.id)} className="btn btn-success">
                                             Update
                                         </button>
+                                        <button onClick={() => this.onTripDelete(trip.id)} className="btn btn-danger">
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         ))
                     }
-                    
-
                 </tbody>
             </table>
         );
@@ -74,8 +85,14 @@ export class Trips extends Component
                     Loading...
                 </em>
             </p>
+        ) : ( this.state.failed ? (
+            <div className="text-danger">
+                <em>
+                    {this.state.error}
+                </em>
+            </div>
         ) : (
-            this.renderAllTripsTable(this.state.trips)
+            this.renderAllTripsTable(this.state.trips))
         )
 
         return (
